@@ -23,6 +23,7 @@ import java.util.*
 class HRActivity : AppCompatActivity(), PlotterListener {
     companion object {
         private const val TAG = "HRActivity"
+
     }
 
     private lateinit var api: PolarBleApi
@@ -36,6 +37,7 @@ class HRActivity : AppCompatActivity(), PlotterListener {
     private var hrDisposable: Disposable? = null
 
     private lateinit var deviceId: String
+    private var textFamke: String = "Hoi"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,11 +53,15 @@ class HRActivity : AppCompatActivity(), PlotterListener {
         api = defaultImplementation(
             applicationContext,
             setOf(
-                PolarBleApi.PolarBleSdkFeature.FEATURE_POLAR_ONLINE_STREAMING,
+                PolarBleApi.PolarBleSdkFeature.FEATURE_HR,
+                PolarBleApi.PolarBleSdkFeature.FEATURE_POLAR_SDK_MODE,
                 PolarBleApi.PolarBleSdkFeature.FEATURE_BATTERY_INFO,
-                PolarBleApi.PolarBleSdkFeature.FEATURE_DEVICE_INFO
+                PolarBleApi.PolarBleSdkFeature.FEATURE_POLAR_H10_EXERCISE_RECORDING,
+                PolarBleApi.PolarBleSdkFeature.FEATURE_POLAR_OFFLINE_RECORDING,
+                PolarBleApi.PolarBleSdkFeature.FEATURE_POLAR_ONLINE_STREAMING,
+                PolarBleApi.PolarBleSdkFeature.FEATURE_POLAR_DEVICE_TIME_SETUP,
+                PolarBleApi.PolarBleSdkFeature.FEATURE_DEVICE_INFO)
             )
-        )
         api.setApiLogger { str: String -> Log.d("SDK", str) }
         api.setApiCallback(object : PolarBleApiCallback() {
             override fun blePowerStateChanged(powered: Boolean) {
@@ -99,6 +105,8 @@ class HRActivity : AppCompatActivity(), PlotterListener {
                 val batteryLevelText = "Battery level: $level%"
                 textViewBattery.append(batteryLevelText)
             }
+
+
 
             override fun hrNotificationReceived(identifier: String, data: PolarHrData.PolarHrSample) {
                 //deprecated
@@ -151,12 +159,19 @@ class HRActivity : AppCompatActivity(), PlotterListener {
     }
 
     fun streamHR() {
+        Log.d(TAG, "log Famke start streamHR")
         val isDisposed = hrDisposable?.isDisposed ?: true
         if (isDisposed) {
+            Log.d(TAG, "log Famke start streamHR isDisposed is ${isDisposed}")
             hrDisposable = api.startHrStreaming(deviceId)
                 .observeOn(AndroidSchedulers.mainThread())
+                .doOnSubscribe { Log.d(TAG, "Subscribed") }
+                .doOnNext { Log.d(TAG, "Next item emitted: $it") }
+                .doOnError { error -> Log.e(TAG, "Error in observable chain: $error") }
                 .subscribe(
                     { hrData: PolarHrData ->
+                        Log.d(TAG, "Received HR data. Sample count: ${hrData.samples.count()}")
+                        Log.d(TAG, "anything" + hrData.samples.count())
                         for (sample in hrData.samples) {
                             Log.d(TAG, "HR ${sample.hr} RR ${sample.rrsMs}")
 
@@ -178,6 +193,7 @@ class HRActivity : AppCompatActivity(), PlotterListener {
         } else {
             // NOTE stops streaming if it is "running"
             hrDisposable?.dispose()
+            Log.d(TAG, "HR stream disposed")
             hrDisposable = null
         }
     }

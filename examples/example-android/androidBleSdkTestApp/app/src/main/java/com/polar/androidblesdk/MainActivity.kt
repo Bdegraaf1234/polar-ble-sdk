@@ -34,7 +34,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     // ATTENTION! Replace with the device ID from your device.
-    private var deviceId = "BC15022D"
+    private var deviceId = "D733F724"
 
     private val api: PolarBleApi by lazy {
         // Notice all features are enabled
@@ -148,7 +148,7 @@ class MainActivity : AppCompatActivity() {
         api.setPolarFilter(false)
 
         // If there is need to log what is happening inside the SDK, it can be enabled like this:
-        val enableSdkLogs = false
+        val enableSdkLogs = true
         if(enableSdkLogs) {
             api.setApiLogger { s: String -> Log.d(API_LOGGER_TAG, s) }
         }
@@ -244,6 +244,9 @@ class MainActivity : AppCompatActivity() {
             autoConnectDisposable = api.autoConnectToDevice(-60, "180D", null)
                 .subscribe(
                     { Log.d(TAG, "auto connect search complete") },
+//                    { polarDeviceInfo: PolarDeviceInfo ->
+//                        Log.d(TAG, "polar device found id: " + polarDeviceInfo.deviceId + " address: " + polarDeviceInfo.address + " rssi: " + polarDeviceInfo.rssi + " name: " + polarDeviceInfo.name + " isConnectable: " + polarDeviceInfo.isConnectable)
+//                    },
                     { throwable: Throwable -> Log.e(TAG, "" + throwable.toString()) }
                 )
         }
@@ -258,6 +261,12 @@ class MainActivity : AppCompatActivity() {
                         { polarDeviceInfo: PolarDeviceInfo ->
                             Log.d(TAG, "polar device found id: " + polarDeviceInfo.deviceId + " address: " + polarDeviceInfo.address + " rssi: " + polarDeviceInfo.rssi + " name: " + polarDeviceInfo.name + " isConnectable: " + polarDeviceInfo.isConnectable)
                         },
+//                        { hrData: PolarHrData ->
+//                            Log.d(TAG, "anything" + hrData.samples.count())
+//                            for (sample in hrData.samples) {
+//                                Log.d(TAG, "HR     bpm: ${sample.hr} rrs: ${sample.rrsMs} rrAvailable: ${sample.rrAvailable} contactStatus: ${sample.contactStatus} contactStatusSupported: ${sample.contactStatusSupported}")
+//                            }
+//                        },
                         { error: Throwable ->
                             toggleButtonUp(scanButton, "Scan devices")
                             Log.e(TAG, "Device scan failed. Reason $error")
@@ -276,11 +285,13 @@ class MainActivity : AppCompatActivity() {
         hrButton.setOnClickListener {
             val isDisposed = hrDisposable?.isDisposed ?: true
             if (isDisposed) {
+                Log.d(TAG, "log Famke start streamHR isDisposed is ${isDisposed}")
                 toggleButtonDown(hrButton, R.string.stop_hr_stream)
                 hrDisposable = api.startHrStreaming(deviceId)
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(
                         { hrData: PolarHrData ->
+                            Log.d(TAG, "anything" + hrData.samples.count())
                             for (sample in hrData.samples) {
                                 Log.d(TAG, "HR     bpm: ${sample.hr} rrs: ${sample.rrsMs} rrAvailable: ${sample.rrAvailable} contactStatus: ${sample.contactStatus} contactStatusSupported: ${sample.contactStatusSupported}")
                             }

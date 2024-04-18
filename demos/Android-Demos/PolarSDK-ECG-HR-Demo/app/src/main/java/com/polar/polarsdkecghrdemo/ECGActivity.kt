@@ -60,10 +60,12 @@ class ECGActivity : AppCompatActivity(), PlotterListener {
         api.setApiCallback(object : PolarBleApiCallback() {
             override fun blePowerStateChanged(powered: Boolean) {
                 Log.d(TAG, "BluetoothStateChanged $powered")
+                Log.d(TAG, "log Famke, devideId:" + deviceId)
             }
 
             override fun deviceConnected(polarDeviceInfo: PolarDeviceInfo) {
                 Log.d(TAG, "Device connected " + polarDeviceInfo.deviceId)
+                Log.d(TAG, "log Famke deviceConnected, devideId:" + deviceId)
                 Toast.makeText(applicationContext, R.string.connected, Toast.LENGTH_SHORT).show()
             }
 
@@ -80,6 +82,7 @@ class ECGActivity : AppCompatActivity(), PlotterListener {
 
                 when (feature) {
                     PolarBleApi.PolarBleSdkFeature.FEATURE_POLAR_ONLINE_STREAMING -> {
+                        Log.d(TAG, "log Famke feature")
                         streamECG()
                         streamHR()
                     }
@@ -146,6 +149,8 @@ class ECGActivity : AppCompatActivity(), PlotterListener {
     }
 
     fun streamECG() {
+        Log.d(TAG, "log Famke start streamECG")
+//        api.setApiLogger(PolarBleApi.PolarBleApiLogger)
         val isDisposed = ecgDisposable?.isDisposed ?: true
         if (isDisposed) {
             ecgDisposable = api.requestStreamSettings(deviceId, PolarBleApi.PolarDeviceDataType.ECG)
